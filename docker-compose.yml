@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      target: development
+    restart: on-failure
+    environment:
+      MONGO_HOST: mongo
+      MONGO_NAME: isaac-database
+      MONGO_USER: isaac-user
+      MONGO_PASSWORD: D3skS3ll
+
+      NODE_ENV: development
+      AUTO_RUN_DB_MIGRATIONS: 'true'
+      BASE_URL: http://localhost:5000
+      PORT: 5000
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 5000:5000
+      - 9229:9229
+    command: npm run start:debug
+    networks:
+      - webnet
+    depends_on:
+      - db
+
+  mongo:
+    container_name: mongo
+    hostname: mongo
+    image: mongo:4.4-bionic
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "isaac-admin"
+      MONGO_INITDB_ROOT_PASSWORD: "D3skS3ll"
+      # MONGO_INITDB_DATABASE: isaac-database
+      MONGO_INITDB_DATABASE: isaac-database
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - 27017:27017
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+
+volumes:
+  mongo_data:
